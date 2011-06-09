@@ -1,0 +1,116 @@
+<apex:page standardController="Campaign" extensions="segmentsController" id="segmentspage">
+<script type="text/javascript">
+    
+     
+    function sumIt() {
+        var errorColor = "#ff0000";
+        var cleanColor = "#000000";
+        var elements = document.getElementsByClassName('targetcount');
+        var percentElements = document.getElementsByClassName('targetpercent');
+        
+        var sum = 0;
+        for(a=0;a<elements.length;a++){
+            sum = eval(sum) + parseInt(elements[a].value);
+            
+            var calcedPercent = (parseInt(elements[a].value)/{!memberCount})*100;
+            percentElements[a].innerHTML = calcedPercent.toFixed(2);
+            
+            
+        }
+        document.getElementById('totalCount').innerHTML = sum;
+        
+        if(eval(sum) != {!memberCount}){
+            document.getElementById('totalCount').style.color = errorColor;
+             document.getElementById('segmentspage:form:contactssettings:contactssettingsbuttons:createsegments').disabled = true;
+        } else {
+            document.getElementById('totalCount').style.color = cleanColor;
+            document.getElementById('segmentspage:form:contactssettings:contactssettingsbuttons:createsegments').disabled = false;
+        }
+        
+        
+        var percentSum = 0;
+        if(eval(sum) == {!memberCount}){
+        	percentSum = 100;
+        } else {
+        	percentElements = document.getElementsByClassName('targetpercent');
+	        for(a=0;a<percentElements.length;a++){
+	        
+	            percentSum = eval(percentSum) + parseInt(percentElements[a].innerHTML);
+	            
+	        }
+        }
+        
+        document.getElementById('totalPercent').innerHTML = percentSum;
+        
+        if(eval(percentSum) != 100){
+            document.getElementById('totalPercent').style.color = errorColor;
+            document.getElementById('percentSymbol').style.color = errorColor;            
+        } else {
+            document.getElementById('totalPercent').style.color = cleanColor;
+            document.getElementById('percentSymbol').style.color = cleanColor;
+        }
+        
+        
+    }
+     
+    
+</script>
+<apex:form id="form">   
+        <apex:sectionHeader title="Segments" subtitle="Create Segments">
+            <description>
+                <p>Randomly split the <strong>{!memberCount}</strong> members into segments.</p>
+                <apex:outputPanel layout="block" rendered="{!memberCount>MAX_SYNCHRONOUS_MEMBERS}"><p>Because there are more than <strong>{!MAX_SYNCHRONOUS_MEMBERS}</strong> members on this Campaign, the segmentation will not be processed immediately. You will receive an email when the segmentation is complete.</p></apex:outputPanel>
+            </description>  
+        </apex:sectionHeader>
+        
+        <apex:pageMessages id="pageMessages"/>
+        
+        <apex:pageBlock id="contactssettings" title="Contacts Settings">         
+            <apex:outputpanel id="segmentpanel">
+                <apex:pageBlockSection id="setting" columns="1" rendered="{!showSegmentsPicker}">
+                    
+                    <apex:pageBlockSectionItem helpText="Select the number of segments you'd like to create.">
+                        <apex:outputText value="Number of Segments"/>
+                        <apex:inputText value="{!stringSegments}" id="segmententry"/>
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+            </apex:outputpanel>
+            
+            <apex:outputpanel id="segmentspanel">
+                <apex:pageBlockSection id="settings" columns="1" rendered="{!showSegmentCreator}">
+                
+                <table id="mytable">
+                <tr><th>Segment Name</th><th>Member Count</th><th>Percentage</th></tr>
+                    <apex:repeat value="{!listOfSegments}" var="segment" id="theRepeat">
+                    <tr>
+                        <td><apex:inputText value="{!segment.campaign.name}" size="100"/></td>
+                        <td><apex:inputText styleclass="targetcount" id="thetargetmembercount" value="{!segment.targetMemberCount}" size="20" onchange="sumIt()"/></td>
+                        <td><apex:outputText styleclass="targetpercent" id="charCountpercentage" value="{!ROUND((segment.targetMemberCount/memberCount)*100,2)}"></apex:outputText>%</td>
+                    </tr>
+                    
+                    </apex:repeat>
+                    <tr><td><strong>Total</strong></td><td id="totalCount">{!memberCount}</td><td><span id="totalPercent">100</span><span id="percentSymbol">%</span></td></tr>
+                    </table>
+                </apex:pageBlockSection>
+            </apex:outputpanel>
+            
+            <apex:outputpanel id="batchpanel">
+                <apex:pageBlockSection id="batch" columns="1" rendered="{!showBatchInfo}">
+                
+                Your batch has been queued for processing. An email will be sent to {!batchEmailNotification} on completion.
+                </apex:pageBlockSection>
+            </apex:outputpanel>
+            
+            <apex:pageBlockButtons id="contactssettingsbuttons">
+                
+
+                <apex:commandButton action="{!resetSegments}" value="Previous" id="backtosegments" rerender="contactssettings,pageMessages" rendered="{!showSegmentCreator}"/>
+				<apex:commandButton action="{!setSegments}" value="Next" id="nextsegments" rerender="contactssettings,pageMessages" rendered="{!showSegmentsPicker}"/>
+				<apex:commandButton action="{!runSegments}" value="Create Segments" id="createsegments" rerender="contactssettings,pageMessages,batchinfo" rendered="{!showSegmentCreator}"/>
+				<apex:commandButton action="/{!parentCampaign.id}" value="Return to Campaign" id="finish" rendered="{!showBatchInfo}"/>
+				<apex:commandButton action="{!cancel}" value="Cancel" id="cancel" rendered="{!!showBatchInfo}"/>
+            </apex:pageBlockButtons> 
+        </apex:pageBlock>
+    </apex:form>
+
+</apex:page>

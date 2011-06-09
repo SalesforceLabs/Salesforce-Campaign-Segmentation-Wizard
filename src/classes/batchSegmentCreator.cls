@@ -91,7 +91,7 @@ global class batchSegmentCreator implements Database.Batchable<SObject>{
 		for(Campaign myCamp : segmentCampaigns){
 			mySegmentIds.add(myCamp.Id);
 		}
-		//set sizes
+		//set sizes for segments
 		List<Integer> sizes = new List<Integer>();
 		sizes.add(100);
 		sizes.add(100);

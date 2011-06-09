@@ -1,0 +1,9 @@
+This is code that works with Salesforce.com.
+
+Easily break down Campaigns for A-B testing or using the Salesforce.com Mass Email wizards.
+Create segments of whatever size works for you and randomly assign campaign members to those
+segments, all of them rolling up using standard Campaign Hierarchy.
+
+Install it from the Appexchange here:
+
+http://appexchange.salesforce.com/listingDetail?listingId=a0N30000003IQEIEA4

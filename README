@@ -1,0 +1,7 @@
+Salesforce Campaign Segmentation Wizard is code that works with Salesforce.com. Easily break down Campaigns for A-B testing or using the Salesforce.com Mass Email wizards.
+Create segments of whatever size works for you and randomly assign campaign members to those segments,
+all of them rolling up using standard Campaign Hierarchy. 
+
+Salesforce Campaign Segmentation Wizard is published by Force.com Labs and is Copyright (c) 2011 Salesforce.com, Inc.
+
+The app is available via the BSD license.  Contributions welcome. Contact labs at salesforce dot com or submit a pull request for details.

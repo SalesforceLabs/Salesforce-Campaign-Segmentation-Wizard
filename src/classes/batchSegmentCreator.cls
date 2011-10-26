@@ -26,33 +26,91 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISE
 OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-global class batchSegmentCreator implements Database.Batchable<SObject>{
+gglobal class batchSegmentCreator implements Database.Batchable<SObject>,Database.Stateful{
 	global String query;
 	global String email;
 	global Id parentCampaignId;
 	global List<Id> segmentCampaignIds;
 	global List<Integer> segmentSizes;
 	global List<Integer> membersAdded;
-	global Boolean success;
+	global String errorTxt = '';
+	global boolean keepOriginal;
 	
 	global database.querylocator start(Database.BatchableContext BC){
 	            return Database.getQueryLocator(query);}
 	
 	global void execute(Database.BatchableContext BC, List<sObject> scope){
+		//Old code from AppEx
+		/*
 		boolean thisBatchSuccess = memberAssignment.assignMembersNow(parentCampaignId,segmentCampaignIds,segmentSizes,membersAdded);
 	    if(!thisBatchSuccess){
 	    	success = false;
 	    }
+	    */
+	    
+	    List<CampaignMember> newCampaignMembers = new List<CampaignMember>();
+	    
+	    for(sObject s : scope){
+	    	
+	    	CampaignMember oldCM = (CampaignMember)s;
+	    	
+	    	Boolean assigned = false;
+	    	
+	    	while(assigned == false){
+		    	Integer assignedList = Math.floor(segmentCampaignIds.size() * Math.Random()).intValue();
+
+				if((membersAdded[assignedList] < segmentSizes[assignedList])){		    
+					 newCampaignMembers.add(
+					 	new CampaignMember(
+							CampaignId = segmentCampaignIds[assignedList],
+							LeadId = oldCM.LeadId,
+							ContactId = oldCM.ContactId		
+					 	)
+					 );
+					 assigned = true;
+					 
+					 membersAdded[assignedList]++;
+					 
+				}
+	    	}	
+ 	
+	    }
+	    
+	    if(!newCampaignMembers.isEmpty()){
+	    	Database.saveresult[] srList = database.insert(newCampaignMembers,false);
+	    	
+	    	List<CampaignMember> deleteMe = new List<CampaignMember>();
+	    	for(Integer i = 0;i<srList.size();i++){
+	    		Database.saveresult sr = srList[i];
+	    		
+	    		if(sr.isSuccess() && !keepOriginal){
+	    			deleteMe.add( (CampaignMember)scope[i] );
+	    		}
+	    		else{
+	    			for(Database.Error e : sr.getErrors()){
+	    				errorTxt = errorTxt + 'Original Record Id:' + scope[i].get('Id') + '\n' + 'Error:' + e.getMessage() + '\n\n';
+	    			}
+	    			
+	    		}
+	    	}
+	    	
+	    	if(!deleteMe.isEmpty()){
+	    		delete deleteMe;
+	    	}
+	    
+	    }
+	    
 	}
 	global void finish(Database.BatchableContext BC){
-		String resultHeader;
+		
+		String hasErrors;
 		String resultBody;
-		if(success){
-			resultHeader = 'Success';
+		if(errorTxt == ''){
+			hasErrors = '';
 			resultBody = ' has completed successfully.';
 		} else {
-			resultHeader = 'Failure';
-			resultBody = ' has failed. Please try again.';
+			hasErrors = 'with Errors';
+			resultBody = ' has complted with errors. \n\n' + errorTxt + '\n\n';
 		}
 		//query the parent and make a better body
 		Campaign parentCampaign = [select id, name from Campaign where id=:parentCampaignId];
@@ -60,9 +118,9 @@ global class batchSegmentCreator implements Database.Batchable<SObject>{
 		Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
 		
 		mail.setToAddresses(new String[] {email});
-		mail.setReplyTo('steve@gokubi.com');
+		mail.setReplyTo(email);
 		mail.setSenderDisplayName('Batch Processing of Campaigns');
-		mail.setSubject(resultHeader + ': Campaign Segmentation Completed - ' + parentCampaign.name);
+		mail.setSubject('Campaign Segmentation Completed - ' + parentCampaign.name + ' ' + hasErrors);
 		mail.setPlainTextBody('The segmentation of ' + parentCampaign.name + resultBody +' https://na1.salesforce.com/' + parentCampaign.Id);
 		
 		Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
@@ -119,7 +177,7 @@ global class batchSegmentCreator implements Database.Batchable<SObject>{
 		for(Campaign myCamp : segmentCampaigns){
 			mySegmentIds.add(myCamp.Id);
 		}
-		//set sizes for segments
+		//set sizes
 		List<Integer> sizes = new List<Integer>();
 		sizes.add(100);
 		sizes.add(100);
@@ -136,6 +194,7 @@ global class batchSegmentCreator implements Database.Batchable<SObject>{
 		batch.segmentCampaignIds = mySegmentIds; 
 		batch.segmentSizes = sizes; 
 		batch.membersAdded = members; 
+		batch.keepOriginal = false;
 		ID batchprocessid = Database.executeBatch(batch); 
 		Test.StopTest();
 		System.AssertEquals(database.countquery('SELECT count()' +' FROM CampaignMember WHERE campaignId=\'' + parentCampaign.Id + '\''), 0);

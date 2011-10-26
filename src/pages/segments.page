@@ -118,6 +118,10 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
                     </apex:repeat>
                     <tr><td><strong>Total</strong></td><td id="totalCount">{!memberCount}</td><td><span id="totalPercent">100</span><span id="percentSymbol">%</span></td></tr>
                     </table>
+                    <apex:outputPanel id="keepOriginalPanel">
+	                    <apex:inputCheckbox value="{!keepOriginal}" id="keepOriginal"/>
+	                    <apex:outputLabel for="keepOriginal" value="Retain original campaign members"/>                    
+                    </apex:outputPanel>
                 </apex:pageBlockSection>
             </apex:outputpanel>
             

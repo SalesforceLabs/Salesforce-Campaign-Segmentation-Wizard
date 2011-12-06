@@ -33,25 +33,31 @@ public with sharing class memberAssignment {
 	static List<Integer> sizes;
 	static List<Integer> members;
 	static List<CampaignMember> newCampaignMembers;	
+	static Boolean keep;
 	
-	public static boolean assignMembersNow(Id parentCampaignId, List<Id> segmentCampaignIds, List<Integer> segmentSizes, List<Integer> membersAdded){
+	public static boolean assignMembersNow(Id parentCampaignId, List<Id> segmentCampaignIds, List<Integer> segmentSizes, List<Integer> membersAdded, Boolean keepOriginal){
 		campId = parentCampaignId;
 		semgmentIds = segmentCampaignIds;
 		sizes = segmentSizes;
 		members = membersAdded;
-		
+		keep = keepOriginal;
 		newCampaignMembers = new List<CampaignMember>();
 		
-		for(CampaignMember thisMember : [select id,campaignId, leadId, contactid from campaignMember where CampaignId = :campId]){
+		List<CampaignMember> oldMembers = [select id,campaignId, leadId, contactid from campaignMember where CampaignId = :campId];
+		
+		for(CampaignMember thisMember : oldMembers){
 		 	assignMember(thisMember);		    
 		}
-		
-		if(newCampaignMembers.size()!=0){
+		system.debug('******newCampaignMembers = '+newCampaignMembers);
+		if(!newCampaignMembers.isEmpty()){
 			try {
 				insert newCampaignMembers;
-				delete [select id,campaignId, leadId, contactid from campaignMember where CampaignId = :campId];
+				if(!keep){
+					delete oldMembers;
+				}
 				return true;
 			} catch (exception e){
+				system.debug('******EXCEPTION = ' + e);
 				return false;
 			}
 		} else {

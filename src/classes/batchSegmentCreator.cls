@@ -26,7 +26,7 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISE
 OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-gglobal class batchSegmentCreator implements Database.Batchable<SObject>,Database.Stateful{
+global class batchSegmentCreator implements Database.Batchable<SObject>,Database.Stateful{
 	global String query;
 	global String email;
 	global Id parentCampaignId;

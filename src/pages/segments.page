@@ -106,22 +106,42 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
             <apex:outputpanel id="segmentspanel">
                 <apex:pageBlockSection id="settings" columns="1" rendered="{!showSegmentCreator}">
                 
-                <table id="mytable">
-                <tr><th>Segment Name</th><th>Member Count</th><th>Percentage</th></tr>
-                    <apex:repeat value="{!listOfSegments}" var="segment" id="theRepeat">
-                    <tr>
-                        <td><apex:inputText value="{!segment.campaign.name}" size="100"/></td>
-                        <td><apex:inputText styleclass="targetcount" id="thetargetmembercount" value="{!segment.targetMemberCount}" size="20" onchange="sumIt()"/></td>
-                        <td><apex:outputText styleclass="targetpercent" id="charCountpercentage" value="{!ROUND((segment.targetMemberCount/memberCount)*100,2)}"></apex:outputText>%</td>
-                    </tr>
-                    
-                    </apex:repeat>
-                    <tr><td><strong>Total</strong></td><td id="totalCount">{!memberCount}</td><td><span id="totalPercent">100</span><span id="percentSymbol">%</span></td></tr>
-                    </table>
-                    <apex:outputPanel id="keepOriginalPanel">
-	                    <apex:inputCheckbox value="{!keepOriginal}" id="keepOriginal"/>
-	                    <apex:outputLabel for="keepOriginal" value="Retain original campaign members"/>                    
-                    </apex:outputPanel>
+                <apex:dataTable value="{!listOfSegments}" var="segment" id="myTable" cellpadding="3">
+                	
+                	<apex:column >
+                		<apex:facet name="header">Segment Name</apex:facet>
+
+						<apex:facet name="footer"><span style="font-weight:bold;float:right;">Total</span></apex:facet>
+			
+						<apex:inputText value="{!segment.campaign.name}" size="100"/>
+                	</apex:column>
+                	
+                	
+                	<apex:column >
+                		<apex:facet name="header">Member Count</apex:facet>
+
+						<apex:facet name="footer"><span id="totalCount">{!memberCount}</span></apex:facet>
+			
+						<apex:inputText styleclass="targetcount" id="thetargetmembercount" value="{!segment.targetMemberCount}" size="20" onchange="sumIt()"/>
+                	</apex:column>
+                	
+                	
+                	<apex:column >
+                		<apex:facet name="header">Percentage</apex:facet>
+
+						<apex:facet name="footer"><span id="totalPercent">100</span>%</apex:facet>
+			
+						<apex:outputText styleclass="targetpercent" id="charCountpercentage" value="{!ROUND((segment.targetMemberCount/memberCount)*100,2)}%"></apex:outputText>
+                	</apex:column>
+                	
+                	
+                
+                </apex:dataTable>
+                
+                   <apex:pageBlockSectionItem helpText="By default, all members from the parent campaign are MOVED to the child campaign and the parent will be emptied. Checking this option will keep the original campaign members intact.">
+	                    <apex:inputCheckbox value="{!keepOriginal}" id="keepOriginal" />
+	                    <apex:outputLabel for="keepOriginal" value="Retain original campaign members in parent campaign."/>   
+     				</apex:pageBlockSectionItem>
                 </apex:pageBlockSection>
             </apex:outputpanel>
             

@@ -34,6 +34,9 @@ public with sharing class memberAssignment {
 	static List<Integer> members;
 	static List<CampaignMember> newCampaignMembers;	
 	static Boolean keep;
+	static Integer totalSize;
+	static List<Double> sizesPDF;
+	static List<Double> sizesCDF;
 	
 	public static boolean assignMembersNow(Id parentCampaignId, List<Id> segmentCampaignIds, List<Integer> segmentSizes, List<Integer> membersAdded, Boolean keepOriginal){
 		campId = parentCampaignId;
@@ -44,6 +47,29 @@ public with sharing class memberAssignment {
 		newCampaignMembers = new List<CampaignMember>();
 		
 		List<CampaignMember> oldMembers = [select id,campaignId, leadId, contactid from campaignMember where CampaignId = :campId];
+
+		// Figure out the fraction that should go into each list,
+		// then generate a cumulative distribution function to
+		// use in making the assignments
+		totalSize = 0;
+		for (Ingeger i : sizes) {
+			totalSize += i;
+		}
+
+		sizesPDF = new List<Double>();
+		for (Integer s : sizes) {
+			sizesPDF.add(1.0*s/totalSize);
+		}
+
+		// roll up the PDF into a CDF
+		sizesCDF = new List<Double>();
+		sizesCDF.add(sizesPDF[0]);
+		for (i=1; i<sizesPDF.size(); i++) {
+			sizesCDF.add(sizesPDF[i] + sizesCDF[i-1])
+		}
+		// be sure final value is 1.0, regardless of rounding issues:
+		sizesCDF[sizesCDF.size()-1] = 1.0
+
 		
 		for(CampaignMember thisMember : oldMembers){
 		 	assignMember(thisMember);		    
@@ -66,9 +92,20 @@ public with sharing class memberAssignment {
 	}
 			
 	private static void assignMember(CampaignMember thisCampaignMember){
-		Integer assignedList = Math.floor(semgmentIds.size() * Math.Random()).intValue();
-		
-		if((members[assignedList] < sizes[assignedList])){		    
+		Integer assignedList;
+		Double prob = Math.Random();
+
+		// iterate through sizesCDF to find first correct bucket
+		// note that sizesCDF must be sorted from smallest to largest
+		// probability (and should be given the generation process above)
+		for (i=0; i<sizesCDF.size(); i++) {
+			if (sizesCDF[i] >= prob) {
+				assignedList = i;
+				break;
+			}
+		}
+
+		if(members[assignedList] < sizes[assignedList]){		    
 			 newCampaignMembers.add(
 			 	new CampaignMember(
 					CampaignId = semgmentIds[assignedList],
@@ -76,9 +113,7 @@ public with sharing class memberAssignment {
 					ContactId = thisCampaignMember.ContactId		
 			 	)
 			 );
-			 if(members[assignedList] < sizes[assignedList]){
-			 	members[assignedList]++;
-			 }
+			 members[assignedList]++;
 		} else {
 			assignMember(thisCampaignMember);
 		}

@@ -51,14 +51,14 @@ public with sharing class memberAssignment {
 		// then generate a cumulative distribution function to
 		// use in making the assignments
 		totalSize = 0;
-		for (Ingeger s : sizes) {
+		for (Integer s : sizes) {
 			totalSize += s;
 		}
 
 		// Generate the CDF
 		sizesCDF = new List<Double>();
 		sizesCDF.add(1.0*sizes[0]/totalSize);
-		for (Integer i=1; i<sizes.size() : i++) {
+		for (Integer i=1; i<sizes.size(); i++) {
 			sizesCDF.add(sizesCDF[i-1] + (1.0*sizes[i]/totalSize));
 		}
 		// be sure final value is 1.0, regardless of rounding issues:

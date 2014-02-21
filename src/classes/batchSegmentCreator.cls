@@ -33,6 +33,7 @@ gglobal class batchSegmentCreator implements Database.Batchable<SObject>,Databas
 	global List<Id> segmentCampaignIds;
 	global List<Integer> segmentSizes;
 	global List<Integer> membersAdded;
+	global List<Double> sizesCDF;
 	global String errorTxt = '';
 	global boolean keepOriginal;
 	
@@ -57,7 +58,18 @@ gglobal class batchSegmentCreator implements Database.Batchable<SObject>,Databas
 	    	Boolean assigned = false;
 	    	
 	    	while(assigned == false){
-		    	Integer assignedList = Math.floor(segmentCampaignIds.size() * Math.Random()).intValue();
+	    		Integer assignedList;
+	    		Double prob = Math.Random();
+	    		
+	    		// iterate through sizesCDF to find correct bucket
+	    		// note that sizesCDF must be sorted from smallest to largest
+	    		// probability (and should be given the generation process above)
+	    		for (Integer i=0; i<sizesCDF.size(); i++) {
+	    			if (sizesCDF[i] >= prob) {
+	    				assignedList = i;
+	    				break;
+	    			}
+	    		}
 
 				if((membersAdded[assignedList] < segmentSizes[assignedList])){		    
 					 newCampaignMembers.add(

@@ -68,7 +68,9 @@ public with sharing class memberAssignment {
 		for(CampaignMember thisMember : oldMembers){
 		 	assignMember(thisMember);		    
 		}
-		system.debug('******newCampaignMembers = '+newCampaignMembers);
+		// This may be millions of records long in prod, probably not
+		// worth spitting out to the console every time.
+		// system.debug('******newCampaignMembers = '+newCampaignMembers);
 		if(!newCampaignMembers.isEmpty()){
 			try {
 				insert newCampaignMembers;

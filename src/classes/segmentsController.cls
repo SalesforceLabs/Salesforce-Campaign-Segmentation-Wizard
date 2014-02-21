@@ -208,6 +208,26 @@ public with sharing class segmentsController {
                     batchSegments.segmentCampaignIds = newCampaignIds;
                     batchSegments.segmentSizes = segmentSizes;
                     batchSegments.membersAdded = membersAdded;
+
+		    // Figure out the fraction that should go into each list,
+		    // then generate a cumulative distribution function to
+		    // use in making the assignments
+		    Integer totalSize = 0;
+		    for (Integer s : segmentSizes) {
+		    	totalSize += s;
+		    }
+		    
+		    // Generate the CDF
+		    List<Double> segmentSizesCDF = new List<Double>();
+		    segmentSizesCDF.add(1.0*segmentSizes[0]/totalSize);
+		    for (Integer i=1; i<segmentSizes.size(); i++) {
+		    	segmentSizesCDF.add(segmentSizesCDF[i-1] + (1.0*segmentSizes[i]/totalSize));
+		    }
+		    // be sure final value is 1.0, regardless of rounding issues:
+		    segmentSizesCDF[segmentSizesCDF.size()-1] = 1.0;
+		    
+		    batchSegments.sizesCDF = segmentSizesCDF;
+		    
                     batchSegments.keepOriginal = keepOriginal;
                     batchSegments.email = batchEmailNotification;
                     ID batchprocessid = Database.executeBatch(batchSegments);

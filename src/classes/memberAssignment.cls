@@ -65,10 +65,10 @@ public with sharing class memberAssignment {
 		sizesCDF = new List<Double>();
 		sizesCDF.add(sizesPDF[0]);
 		for (i=1; i<sizesPDF.size(); i++) {
-			sizesCDF.add(sizesPDF[i] + sizesCDF[i-1])
+			sizesCDF.add(sizesPDF[i] + sizesCDF[i-1]);
 		}
 		// be sure final value is 1.0, regardless of rounding issues:
-		sizesCDF[sizesCDF.size()-1] = 1.0
+		sizesCDF[sizesCDF.size()-1] = 1.0;
 
 		
 		for(CampaignMember thisMember : oldMembers){
